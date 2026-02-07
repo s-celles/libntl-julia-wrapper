@@ -35,6 +35,11 @@
 // Arbitrary precision floating point
 #include <NTL/RR.h>
 
+// Factoring (for DetIrredTest, etc.)
+#include <NTL/ZZ_pXFactoring.h>
+#include <NTL/GF2XFactoring.h>
+#include <NTL/lzz_pXFactoring.h>
+
 #include <sstream>
 #include <string>
 #include <stdexcept>
@@ -673,7 +678,9 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
     });
 
     mod.method("GF2X_eval", [](const GF2X& f, const GF2& x) {
-        return eval(f, x);
+        GF2 result;
+        eval(result, f, x);
+        return result;
     });
 
     mod.method("GF2X_DetIrredTest", [](const GF2X& f) {
