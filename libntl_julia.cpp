@@ -17,6 +17,7 @@
 #include <NTL/ZZ_pX.h>
 #include <NTL/vector.h>
 #include <NTL/matrix.h>
+#include <NTL/mat_ZZ.h>
 
 // Binary field types (GF2)
 #include <NTL/GF2.h>
@@ -605,7 +606,8 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
 
     mod.method("GF2_IsZero", [](const GF2& a) { return IsZero(a); });
     mod.method("GF2_IsOne", [](const GF2& a) { return IsOne(a); });
-    mod.method("GF2_IsOdd", [](const GF2& a) { return IsOdd(IsOne(a) ? 1L : 0L); });
+    // GF2 is 0 or 1; 1 is odd, 0 is even
+    mod.method("GF2_IsOdd", [](const GF2& a) { return IsOne(a); });
 
     mod.method("GF2_add", [](const GF2& a, const GF2& b) { return a + b; });
     mod.method("GF2_sub", [](const GF2& a, const GF2& b) { return a - b; });
@@ -677,14 +679,25 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
         return df;
     });
 
+    // Evaluate GF2X polynomial at a GF2 point
+    // At x=0: return constant term; at x=1: return XOR of all coefficients
     mod.method("GF2X_eval", [](const GF2X& f, const GF2& x) {
-        GF2 result;
-        eval(result, f, x);
-        return result;
+        if (IsZero(x)) {
+            return ConstTerm(f);
+        } else {
+            // x=1: sum all coefficients (XOR in GF(2))
+            GF2 result;
+            clear(result);
+            for (long i = 0; i <= deg(f); i++) {
+                result += coeff(f, i);
+            }
+            return result;
+        }
     });
 
-    mod.method("GF2X_DetIrredTest", [](const GF2X& f) {
-        return DetIrredTest(f);
+    // For GF2X, use IterIrredTest (DetIrredTest is for ZZ_pX/zz_pX)
+    mod.method("GF2X_IterIrredTest", [](const GF2X& f) {
+        return IterIrredTest(f);
     });
 
     mod.method("GF2X_iszero", [](const GF2X& f) { return IsZero(f); });
