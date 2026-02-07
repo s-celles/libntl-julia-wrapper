@@ -2,7 +2,8 @@
  * LibNTL Julia Wrapper
  *
  * CxxWrap-based wrapper for NTL (Number Theory Library) providing
- * Julia bindings for ZZ, ZZ_p, and ZZX types.
+ * Julia bindings for ZZ, ZZ_p, ZZX, Vec<ZZ>, Mat<ZZ>, PrimeSeq, and
+ * number theory functions (PowerMod, ProbPrime, etc.).
  */
 
 #include <jlcxx/jlcxx.hpp>
@@ -11,6 +12,8 @@
 #include <NTL/ZZ.h>
 #include <NTL/ZZ_p.h>
 #include <NTL/ZZX.h>
+#include <NTL/vector.h>
+#include <NTL/matrix.h>
 
 #include <sstream>
 #include <string>
@@ -267,5 +270,151 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod)
         std::ostringstream oss;
         oss << f;
         return oss.str();
+    });
+
+    // =========================================================================
+    // Vec<ZZ> Type (Vector of Integers)
+    // =========================================================================
+
+    mod.add_type<Vec<ZZ>>("VecZZ")
+        .constructor<>()
+        .method("__copy__", [](const Vec<ZZ>& v) { return Vec<ZZ>(v); });
+
+    mod.method("VecZZ_length", [](const Vec<ZZ>& v) { return v.length(); });
+
+    mod.method("VecZZ_getindex", [](const Vec<ZZ>& v, long i) {
+        // Julia is 1-indexed, NTL operator() is 1-indexed
+        if (i < 1 || i > v.length()) {
+            throw std::out_of_range("Index out of bounds");
+        }
+        return v(i);
+    });
+
+    mod.method("VecZZ_setindex!", [](Vec<ZZ>& v, long i, const ZZ& x) {
+        if (i < 1 || i > v.length()) {
+            throw std::out_of_range("Index out of bounds");
+        }
+        v(i) = x;
+    });
+
+    mod.method("VecZZ_setlength!", [](Vec<ZZ>& v, long n) {
+        v.SetLength(n);
+    });
+
+    mod.method("VecZZ_append!", [](Vec<ZZ>& v, const ZZ& x) {
+        append(v, x);
+    });
+
+    mod.method("VecZZ_to_string", [](const Vec<ZZ>& v) {
+        std::ostringstream oss;
+        oss << v;
+        return oss.str();
+    });
+
+    // =========================================================================
+    // Mat<ZZ> Type (Matrix of Integers)
+    // =========================================================================
+
+    mod.add_type<Mat<ZZ>>("MatZZ")
+        .constructor<>()
+        .method("__copy__", [](const Mat<ZZ>& m) { return Mat<ZZ>(m); });
+
+    mod.method("MatZZ_nrows", [](const Mat<ZZ>& m) { return m.NumRows(); });
+    mod.method("MatZZ_ncols", [](const Mat<ZZ>& m) { return m.NumCols(); });
+
+    mod.method("MatZZ_getindex", [](const Mat<ZZ>& m, long i, long j) {
+        // Julia is 1-indexed, NTL operator() is 1-indexed
+        if (i < 1 || i > m.NumRows() || j < 1 || j > m.NumCols()) {
+            throw std::out_of_range("Index out of bounds");
+        }
+        return m(i, j);
+    });
+
+    mod.method("MatZZ_setindex!", [](Mat<ZZ>& m, long i, long j, const ZZ& x) {
+        if (i < 1 || i > m.NumRows() || j < 1 || j > m.NumCols()) {
+            throw std::out_of_range("Index out of bounds");
+        }
+        m(i, j) = x;
+    });
+
+    mod.method("MatZZ_setdims!", [](Mat<ZZ>& m, long n, long k) {
+        m.SetDims(n, k);
+    });
+
+    mod.method("MatZZ_mul", [](const Mat<ZZ>& a, const Mat<ZZ>& b) {
+        Mat<ZZ> c;
+        mul(c, a, b);
+        return c;
+    });
+
+    mod.method("MatZZ_add", [](const Mat<ZZ>& a, const Mat<ZZ>& b) {
+        Mat<ZZ> c;
+        add(c, a, b);
+        return c;
+    });
+
+    mod.method("MatZZ_sub", [](const Mat<ZZ>& a, const Mat<ZZ>& b) {
+        Mat<ZZ> c;
+        sub(c, a, b);
+        return c;
+    });
+
+    mod.method("MatZZ_to_string", [](const Mat<ZZ>& m) {
+        std::ostringstream oss;
+        oss << m;
+        return oss.str();
+    });
+
+    // =========================================================================
+    // PrimeSeq (Prime Number Iterator)
+    // =========================================================================
+
+    mod.add_type<PrimeSeq>("PrimeSeq")
+        .constructor<>();
+
+    mod.method("PrimeSeq_next", [](PrimeSeq& ps) {
+        return ps.next();
+    });
+
+    mod.method("PrimeSeq_reset", [](PrimeSeq& ps, long start) {
+        ps.reset(start);
+    });
+
+    // =========================================================================
+    // Number Theory Functions
+    // =========================================================================
+
+    // PowerMod: a^e mod n
+    mod.method("ZZ_PowerMod", [](const ZZ& a, const ZZ& e, const ZZ& n) {
+        if (n <= 1) throw std::domain_error("Modulus must be > 1");
+        return PowerMod(a, e, n);
+    });
+
+    // PowerMod with long exponent
+    mod.method("ZZ_PowerMod_long", [](const ZZ& a, long e, const ZZ& n) {
+        if (n <= 1) throw std::domain_error("Modulus must be > 1");
+        return PowerMod(a, e, n);
+    });
+
+    // Bit operations
+    mod.method("ZZ_bit", [](const ZZ& a, long i) {
+        return bit(a, i);
+    });
+
+    // RandomBnd: random in [0, n-1]
+    mod.method("ZZ_RandomBnd", [](const ZZ& n) {
+        if (n <= 0) throw std::domain_error("Bound must be > 0");
+        return RandomBnd(n);
+    });
+
+    // RandomBits: random n-bit number
+    mod.method("ZZ_RandomBits", [](long n) {
+        if (n < 0) throw std::domain_error("Number of bits must be >= 0");
+        return RandomBits_ZZ(n);
+    });
+
+    // ProbPrime: Miller-Rabin primality test
+    mod.method("ZZ_ProbPrime", [](const ZZ& n, long num_trials) {
+        return ProbPrime(n, num_trials);
     });
 }
