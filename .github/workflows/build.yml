@@ -53,10 +53,47 @@ jobs:
         run: |
           brew install ntl gmp
 
-      - name: Install system dependencies (Windows)
+      - name: Install GMP (Windows)
         if: runner.os == 'Windows'
         run: |
-          vcpkg install ntl:x64-windows gmp:x64-windows
+          vcpkg install gmp:x64-windows
+
+      - name: Cache NTL build (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        id: ntl-cache
+        with:
+          path: C:\ntl
+          key: ntl-11.6.0-windows-msvc
+
+      - name: Build NTL from source (Windows)
+        if: runner.os == 'Windows' && steps.ntl-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          # Download NTL source
+          Invoke-WebRequest -Uri "https://libntl.org/WinNTL-11_6_0.zip" -OutFile ntl.zip
+          Expand-Archive -Path ntl.zip -DestinationPath .
+
+          # Setup Visual Studio environment
+          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          Import-Module "$vsPath\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments "-arch=x64"
+
+          # Build NTL
+          cd WinNTL-11_6_0\src
+
+          # Compile all source files
+          $sources = Get-ChildItem -Filter "*.cpp" | ForEach-Object { $_.Name }
+          cl /c /EHsc /O2 /MT /I..\include $sources
+
+          # Create static library
+          lib /OUT:ntl.lib *.obj
+
+          # Install to C:\ntl
+          New-Item -ItemType Directory -Force -Path C:\ntl\lib
+          New-Item -ItemType Directory -Force -Path C:\ntl\include
+          Copy-Item ntl.lib C:\ntl\lib\
+          Copy-Item -Recurse ..\include\NTL C:\ntl\include\
 
       - name: Setup Julia
         uses: julia-actions/setup-julia@v2
@@ -95,7 +132,9 @@ jobs:
             -A x64 `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_PREFIX_PATH="$prefix_path"
+            -DCMAKE_PREFIX_PATH="$prefix_path;C:/ntl" `
+            -DNTL_INCLUDE_DIR="C:/ntl/include" `
+            -DNTL_LIBRARY="C:/ntl/lib/ntl.lib"
 
       - name: Build
         run: cmake --build build --config Release

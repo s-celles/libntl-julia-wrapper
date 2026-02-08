@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Compiler caching via ccache for faster rebuilds
   - Julia package caching for faster dependency resolution
 - Windows CI support
-  - NTL and GMP installation via vcpkg
+  - NTL built from source (not available in vcpkg)
+  - GMP installation via vcpkg
   - Visual Studio 2022 (MSVC) compiler
-  - vcpkg toolchain integration for CMake
+  - NTL build caching for faster subsequent builds
