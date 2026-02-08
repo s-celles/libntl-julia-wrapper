@@ -127,12 +127,12 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           $prefix_path = julia -e 'using CxxWrap; print(CxxWrap.prefix_path())'
+          $vcpkg_installed = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
           cmake -B build `
             -G "Visual Studio 17 2022" `
             -A x64 `
             -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_PREFIX_PATH="$prefix_path;C:/ntl" `
+            -DCMAKE_PREFIX_PATH="$prefix_path;C:/ntl;$vcpkg_installed" `
             -DNTL_INCLUDE_DIR="C:/ntl/include" `
             -DNTL_LIBRARY="C:/ntl/lib/ntl.lib"
 
