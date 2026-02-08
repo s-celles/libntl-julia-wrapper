@@ -1,0 +1,92 @@
+################################################################################
+#                                                                              #
+#                              .gitignore                                      #
+#                                                                              #
+#  This file ignores EVERYTHING by default and explicitly includes only the    #
+#  files and directories required for the project.                             #
+#  To add an exception, use the "!" prefix before the path.                    #
+#                                                                              #
+################################################################################
+*
+
+################################################################################
+!CMakeLists.txt
+!libntl_julia.cpp
+!LICENSE
+!README.md
+!CHANGELOG.md
+
+# GitHub Actions CI
+!.github/
+!.github/**
+
+################################################################################
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Linker files
+*.ilk
+
+# Debugger Files
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+*.so.*
+
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build directories
+build/
+Build/
+build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt 
+compile_commands.json
+
+# Temporary files
+*.tmp 
+*.log 
+*.bak 
+*.swp 
+
+# vcpkg
+vcpkg_installed/
+
+# debug information files
+*.dwo
+
+# test output & cache
+Testing/
+.cache/
