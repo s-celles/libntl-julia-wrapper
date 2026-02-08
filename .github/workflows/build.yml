@@ -64,7 +64,7 @@ jobs:
         id: ntl-cache
         with:
           path: C:\ntl
-          key: ntl-11.6.0-windows-msvc
+          key: ntl-11.6.0-windows-msvc-md
 
       - name: Build NTL from source (Windows)
         if: runner.os == 'Windows' && steps.ntl-cache.outputs.cache-hit != 'true'
@@ -82,9 +82,9 @@ jobs:
           # Build NTL
           cd WinNTL-11_6_0\src
 
-          # Compile all source files
+          # Compile all source files (use /MD for dynamic runtime to match Julia/CxxWrap)
           $sources = Get-ChildItem -Filter "*.cpp" | ForEach-Object { $_.Name }
-          cl /c /EHsc /O2 /MT /I..\include $sources
+          cl /c /EHsc /O2 /MD /I..\include $sources
 
           # Create static library
           lib /OUT:ntl.lib *.obj
