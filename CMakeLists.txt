@@ -31,6 +31,11 @@ target_include_directories(libntl_julia
 
 target_compile_definitions(libntl_julia PRIVATE NTL_EXCEPTIONS=on)
 
+# Windows: Prevent min/max macro conflicts with NTL
+if(WIN32)
+    target_compile_definitions(libntl_julia PRIVATE NOMINMAX)
+endif()
+
 set_target_properties(libntl_julia PROPERTIES
     PREFIX ""
     OUTPUT_NAME "libntl_julia"
