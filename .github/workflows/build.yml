@@ -123,6 +123,17 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_PREFIX_PATH=$(julia -e 'using CxxWrap; print(CxxWrap.prefix_path())')
 
+      - name: Debug CxxWrap paths (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $prefix_path = julia -e 'using CxxWrap; print(CxxWrap.prefix_path())'
+          Write-Host "CxxWrap prefix_path: $prefix_path"
+          Write-Host "Contents of prefix_path:"
+          Get-ChildItem -Path $prefix_path -Recurse | Select-Object FullName
+          Write-Host "Looking for JlCxx libraries:"
+          Get-ChildItem -Path $prefix_path -Recurse -Filter "*.lib" | Select-Object FullName
+          Get-ChildItem -Path $prefix_path -Recurse -Filter "*.dll" | Select-Object FullName
+
       - name: Configure CMake (Windows)
         if: runner.os == 'Windows'
         run: |
@@ -134,7 +145,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_PREFIX_PATH="$prefix_path;C:/ntl;$vcpkg_installed" `
             -DNTL_INCLUDE_DIR="C:/ntl/include" `
-            -DNTL_LIBRARY="C:/ntl/lib/ntl.lib"
+            -DNTL_LIBRARY="C:/ntl/lib/ntl.lib" `
+            --debug-find
 
       - name: Build
         run: cmake --build build --config Release
