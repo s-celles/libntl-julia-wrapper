@@ -1,5 +1,7 @@
 # libntl-julia-wrapper
 
+[![Build](https://github.com/s-celles/libntl-julia-wrapper/actions/workflows/build.yml/badge.svg)](https://github.com/s-celles/libntl-julia-wrapper/actions/workflows/build.yml)
+
 CxxWrap-based Julia bindings for [NTL](https://libntl.org/) (Number Theory Library).
 
 ## Features
